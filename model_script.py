@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 from sklearn.linear_model import LogisticRegression
 import argparse
+import pickle
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-l', '--url_len', default='0')
@@ -13,6 +14,7 @@ URL_LEN = int(args.url_len)
 TLD = args.tld
 HTTPS = int(args.https)
 
+"""
 train_df = pd.read_csv('./data/train/Webpages_Classification_train_data.csv')
 test_df = pd.read_csv('./data/test/Webpages_Classification_test_data.csv')
 
@@ -55,6 +57,9 @@ logisticRegr.fit(x_train, y_train)
 #def metrics(y_true, y_pred):
 #    print('Confusion matrix:\n', confusion_matrix(y_true, y_pred))
 #    print('\nReport:\n', classification_report(y_true, y_pred))
+"""
+
+logisticRegr = pickle.load(open("./finalized_model.sav", 'rb'))
 
 x_test = pd.DataFrame(columns = ['url_len', 'tld', 'https'])
 x_test.loc[len(x_test.index)] = [URL_LEN, TLD, HTTPS]
