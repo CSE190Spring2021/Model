@@ -3,16 +3,26 @@ from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 from sklearn.linear_model import LogisticRegression
 import argparse
 import pickle
+import urllib.request as urllib2
+import re
+import json
+#from urllib2 import urlopen
+import tldextract
+#import urllib2
+from urllib.parse import urlparse, parse_qs
+import socket
+import requests
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-l', '--url_len', default='0')
-parser.add_argument('-t', '--tld', default='com')
-parser.add_argument('-a', '--https', default='0')
+parser.add_argument('-u', '--url', default='https://www.google.com')
+#parser.add_argument('-t', '--tld', default='com')
+#parser.add_argument('-a', '--https', default='0')
 args = parser.parse_args()
 
-URL_LEN = int(args.url_len)
-TLD = args.tld
-HTTPS = int(args.https)
+URL = args.url
+#URL_LEN = int(args.url_len)
+#TLD = args.tld
+#HTTPS = int(args.https)
 
 """
 train_df = pd.read_csv('./data/train/Webpages_Classification_train_data.csv')
@@ -59,12 +69,31 @@ logisticRegr.fit(x_train, y_train)
 #    print('\nReport:\n', classification_report(y_true, y_pred))
 """
 
-logisticRegr = pickle.load(open("./finalized_model.sav", 'rb'))
+logisticRegr = pickle.load(open("./finalized_model_new.sav", 'rb'))
 
-x_test = pd.DataFrame(columns = ['url_len', 'tld', 'https'])
-x_test.loc[len(x_test.index)] = [URL_LEN, TLD, HTTPS]
+x_test = pd.DataFrame(columns = ['url_len', 'geo_loc', 'tld',
+       'https'])
+URL_LEN = len(URL)
+HTTPS = 0
+if "https" in URL:
+    HTTPS = 1
+IP_ADDRESS = socket.gethostbyname(URL[8:])
+GEO_IP_API_URL  = 'http://ip-api.com/json/' + IP_ADDRESS
+response = urllib2.urlopen(GEO_IP_API_URL)
+data = json.load(response)
+GEO_LOC = data['country']
+ext = tldextract.extract(URL)
+TLD = ext.suffix
+
+x_test.loc[len(x_test.index)] = [URL_LEN, GEO_LOC, TLD, HTTPS]
 x_test['tld'] = OrdinalEncoder().fit_transform(x_test.tld.values.reshape(-1,1))
 x_test['https'] = OrdinalEncoder().fit_transform(x_test.https.values.reshape(-1,1))
+x_test['geo_loc'] = OrdinalEncoder().fit_transform(x_test.geo_loc.values.reshape(-1,1))
+
+#x_test = pd.DataFrame(columns = ['url_len', 'tld', 'https'])
+#x_test.loc[len(x_test.index)] = [URL_LEN, TLD, HTTPS]
+#x_test['tld'] = OrdinalEncoder().fit_transform(x_test.tld.values.reshape(-1,1))
+#x_test['https'] = OrdinalEncoder().fit_transform(x_test.https.values.reshape(-1,1))
 
 y_pred = logisticRegr.predict(x_test)
 if int(y_pred[0]) == 1:
