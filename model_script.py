@@ -1,3 +1,5 @@
+#Dataset: https://www.kaggle.com/aksingh2411/dataset-of-malicious-and-benign-webpages
+
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 from sklearn.linear_model import LogisticRegression
