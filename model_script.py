@@ -1,5 +1,3 @@
-#Dataset: https://www.kaggle.com/aksingh2411/dataset-of-malicious-and-benign-webpages
-
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 from sklearn.linear_model import LogisticRegression
@@ -71,7 +69,7 @@ logisticRegr.fit(x_train, y_train)
 #    print('\nReport:\n', classification_report(y_true, y_pred))
 """
 
-logisticRegr = pickle.load(open("./finalized_model_new.sav", 'rb'))
+logisticRegr = pickle.load(open("./Model/finalized_model_new.sav", 'rb'))
 
 x_test = pd.DataFrame(columns = ['url_len', 'geo_loc', 'tld',
        'https'])
@@ -79,26 +77,36 @@ URL_LEN = len(URL)
 HTTPS = 0
 if "https" in URL:
     HTTPS = 1
-IP_ADDRESS = socket.gethostbyname(URL[8:])
-GEO_IP_API_URL  = 'http://ip-api.com/json/' + IP_ADDRESS
-response = urllib2.urlopen(GEO_IP_API_URL)
-data = json.load(response)
-GEO_LOC = data['country']
-ext = tldextract.extract(URL)
-TLD = ext.suffix
-
-x_test.loc[len(x_test.index)] = [URL_LEN, GEO_LOC, TLD, HTTPS]
-x_test['tld'] = OrdinalEncoder().fit_transform(x_test.tld.values.reshape(-1,1))
-x_test['https'] = OrdinalEncoder().fit_transform(x_test.https.values.reshape(-1,1))
-x_test['geo_loc'] = OrdinalEncoder().fit_transform(x_test.geo_loc.values.reshape(-1,1))
-
-#x_test = pd.DataFrame(columns = ['url_len', 'tld', 'https'])
-#x_test.loc[len(x_test.index)] = [URL_LEN, TLD, HTTPS]
-#x_test['tld'] = OrdinalEncoder().fit_transform(x_test.tld.values.reshape(-1,1))
-#x_test['https'] = OrdinalEncoder().fit_transform(x_test.https.values.reshape(-1,1))
-
-y_pred = logisticRegr.predict(x_test)
-if int(y_pred[0]) == 1:
-    print("SAFE")
-else:
+URL = URL.strip()
+if URL[len(URL)-1] == '/':
+    URL = URL[:-1]
+flag = False
+try:
+    IP_ADDRESS = socket.gethostbyname(URL[8:])
+except:
     print("UNSAFE")
+    flag = True
+
+if (flag == False):
+    GEO_IP_API_URL  = 'http://ip-api.com/json/' + IP_ADDRESS
+    response = urllib2.urlopen(GEO_IP_API_URL)
+    data = json.load(response)
+    GEO_LOC = data['country']
+    ext = tldextract.extract(URL)
+    TLD = ext.suffix
+
+    x_test.loc[len(x_test.index)] = [URL_LEN, GEO_LOC, TLD, HTTPS]
+    x_test['tld'] = OrdinalEncoder().fit_transform(x_test.tld.values.reshape(-1,1))
+    x_test['https'] = OrdinalEncoder().fit_transform(x_test.https.values.reshape(-1,1))
+    x_test['geo_loc'] = OrdinalEncoder().fit_transform(x_test.geo_loc.values.reshape(-1,1))
+
+    #x_test = pd.DataFrame(columns = ['url_len', 'tld', 'https'])
+    #x_test.loc[len(x_test.index)] = [URL_LEN, TLD, HTTPS]
+    #x_test['tld'] = OrdinalEncoder().fit_transform(x_test.tld.values.reshape(-1,1))
+    #x_test['https'] = OrdinalEncoder().fit_transform(x_test.https.values.reshape(-1,1))
+
+    y_pred = logisticRegr.predict(x_test)
+    if int(y_pred[0]) == 1:
+        print("SAFE")
+    else:
+        print("UNSAFE")
